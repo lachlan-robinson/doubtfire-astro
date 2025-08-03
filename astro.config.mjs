@@ -30,6 +30,10 @@ export default defineConfig({
               label: 'OnTrack Intial Setup Guidance',
               link: '/setup/set',
             },
+            {
+              label: '8.0.x & 9.x Setup Guidance',
+              link: '/setup/8x9x',
+            },
           ],
         },
 
@@ -59,7 +63,7 @@ export default defineConfig({
             {
               label: 'activity types',
               link: '/backend/api/activity_types',
-            },     
+            },
             {
               label: 'admin',
               link: '/backend/api/admin',
@@ -207,7 +211,7 @@ export default defineConfig({
             {
               label: 'Backend APIs',
               link: '/courseflow/backend',
-            }
+            },
           ],
         },
       ],
