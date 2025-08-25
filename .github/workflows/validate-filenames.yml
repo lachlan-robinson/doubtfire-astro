@@ -1,0 +1,52 @@
+# .github/workflows/check-colon-in-filenames.yml
+name: Check filenames for colons
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-filenames:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get list of changed files
+        id: files
+        run: |
+          files=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files --jq '.[].filename')
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$files" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for colons
+        id: check
+        run: |
+          bad_files=$(echo "${{ steps.files.outputs.files }}" | grep ":" || true)
+          if [ -n "$bad_files" ]; then
+            echo "bad_files<<EOF" >> $GITHUB_OUTPUT
+            echo "$bad_files" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "No bad filenames found."
+          fi
+
+      - name: Comment on PR if bad files found
+        if: failure() && steps.check.outputs.bad_files != ''
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const badFiles = `\`\`\`
+${{ steps.check.outputs.bad_files }}
+\`\`\``;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `❌ Filenames with colons detected:\n${badFiles}\nPlease rename these files to remove ":" before merging.`
+            })
