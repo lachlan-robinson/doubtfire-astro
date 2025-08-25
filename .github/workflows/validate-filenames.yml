@@ -1,5 +1,5 @@
 # .github/workflows/validate-filenames.yml
-name: Check filenames
+name: Check Filenames
 
 on:
   pull_request:
@@ -22,7 +22,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check if Valid Filename
+      - name: Check For Valid Filenames
         id: check
         run: |
           bad_files=$(echo "${{ steps.files.outputs.files }}" | grep ":" || true)
@@ -48,7 +48,7 @@ jobs:
               return;
             }
             const body = [
-              "❌ Filenames with colons detected:",
+              "❌ Invalid Filenames Found:",
               "```",
               badFiles,
               "```",
