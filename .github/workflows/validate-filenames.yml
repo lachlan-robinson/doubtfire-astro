@@ -22,18 +22,37 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Check For Valid Filenames
+      - name: Validate Filenames (cross-platform)
         id: check
         run: |
-          bad_files=$(echo "${{ steps.files.outputs.files }}" | grep ":" || true)
+          bad_files=""
+          while IFS= read -r file; do
+            fname=$(basename "$file")
+
+            # Check for illegal characters
+            if echo "$fname" | grep -qE '[:*?"<>|]'; then
+              bad_files="$bad_files\n$file (contains invalid characters)"
+            fi
+
+            # Check for trailing space or dot
+            if echo "$fname" | grep -qE '(\.|\s)$'; then
+              bad_files="$bad_files\n$file (ends with space or dot)"
+            fi
+
+            # Check for Windows reserved names (case-insensitive)
+            if echo "$fname" | grep -qiE '^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(\..*)?$'; then
+              bad_files="$bad_files\n$file (reserved Windows filename)"
+            fi
+          done <<< "${{ steps.files.outputs.files }}"
+
           if [ -n "$bad_files" ]; then
             echo "bad_files<<EOF" >> $GITHUB_OUTPUT
-            echo "$bad_files" >> $GITHUB_OUTPUT
+            echo -e "$bad_files" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
             exit 1
           else
             echo "bad_files=" >> $GITHUB_OUTPUT
-            echo "No bad filenames found."
+            echo "✅ All filenames are cross-platform safe."
           fi
 
       - name: Comment on PR if invalid filenames found
@@ -48,11 +67,11 @@ jobs:
               return;
             }
             const body = [
-              "❌ Invalid Filenames Found:",
+              "❌ Invalid Filenames Found (cross-platform check):",
               "```",
-              badFiles,
+              badFiles.trim(),
               "```",
-              'Please rename these files to remove ":" before merging.'
+              "Please rename these files to remove reserved characters/names so they work across Windows, macOS, and Linux."
             ].join("\n");
             await github.rest.issues.createComment({
               owner: context.repo.owner,
