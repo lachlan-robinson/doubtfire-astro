@@ -1,4 +1,4 @@
-# .github/workflows/check-colon-in-filenames.yml
+# .github/workflows/validate-filenames.yml
 name: Check filenames for colons
 
 on:
@@ -15,7 +15,7 @@ jobs:
       - name: Get list of changed files
         id: files
         run: |
-          files=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files --jq '.[].filename')
+          files=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path')
           echo "files<<EOF" >> $GITHUB_OUTPUT
           echo "$files" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
@@ -41,12 +41,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const badFiles = `\`\`\`
-${{ steps.check.outputs.bad_files }}
-\`\`\``;
-            github.rest.issues.createComment({
+            const badFiles = process.env.BAD_FILES;
+            const body = `❌ Filenames with colons detected:\n\n\`\`\`\n${badFiles}\n\`\`\`\nPlease rename these files to remove ":" before merging.`;
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `❌ Filenames with colons detected:\n${badFiles}\nPlease rename these files to remove ":" before merging.`
-            })
+              issue_number: context.issue.num_
