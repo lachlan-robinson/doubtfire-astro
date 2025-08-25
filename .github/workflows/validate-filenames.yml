@@ -32,6 +32,7 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
             exit 1
           else
+            echo "bad_files=" >> $GITHUB_OUTPUT
             echo "No bad filenames found."
           fi
 
@@ -41,9 +42,23 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const badFiles = process.env.BAD_FILES;
-            const body = `❌ Filenames with colons detected:\n\n\`\`\`\n${badFiles}\n\`\`\`\nPlease rename these files to remove ":" before merging.`;
+            const badFiles = process.env.BAD_FILES || '';
+            if (badFiles.trim().length === 0) {
+              console.log("No bad files to report, skipping comment.");
+              return;
+            }
+            const body = [
+              "❌ Filenames with colons detected:",
+              "```",
+              badFiles,
+              "```",
+              'Please rename these files to remove ":" before merging.'
+            ].join("\n");
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: context.issue.num_
+              issue_number: context.issue.number,
+              body
+            });
+        env:
+          BAD_FILES: ${{ steps.check.outputs.bad_files }}
