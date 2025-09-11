@@ -1,4 +1,6 @@
-# SQL Injection Vulnerability Assessment
+---
+title: SQL Injection Vulnerability Assessment
+---
 
 ## 1. Introduction
 
@@ -7,6 +9,7 @@ SQL Injection is a code injection technique that exploits vulnerabilities in app
 ### Examples of SQL Injection
 
 **Basic Authentication Bypass:**
+
 ```sql
 -- Original intended query
 SELECT * FROM users WHERE username = 'input_username' AND password = 'input_password'
@@ -18,6 +21,7 @@ SELECT * FROM users WHERE username = '' OR '1'='1' AND password = 'password'
 This injection makes the WHERE clause always evaluate to true, potentially granting access without valid credentials.
 
 **Data Extraction:**
+
 ```sql
 -- With SQL injection input: admin' UNION SELECT username, password FROM users--
 SELECT * FROM users WHERE username = 'admin' UNION SELECT username, password FROM users--' AND password = 'password'
@@ -26,6 +30,7 @@ SELECT * FROM users WHERE username = 'admin' UNION SELECT username, password FRO
 This injection attempts to retrieve all usernames and passwords from the database.
 
 **Destructive Operations:**
+
 ```sql
 -- With SQL injection input: '; DROP TABLE users;--
 SELECT * FROM users WHERE username = ''; DROP TABLE users;--' AND password = 'password'
@@ -38,16 +43,20 @@ This injection attempts to delete the entire users table.
 The following test cases were executed to assess the application's resistance to SQL injection attacks:
 
 1. **Authentication Bypass Tests:**
+
    - Testing `' OR '1'='1` in username and password fields
    - Testing `admin' --` to comment out password verification
 
 2. **Data Extraction Tests:**
+
    - Testing `' UNION SELECT username, password FROM users --` to retrieve sensitive data
 
 3. **Destructive Operation Tests:**
+
    - Testing `' OR '1'='1'; DROP TABLE users; --` to attempt database destruction
 
 4. **Other Common Patterns:**
+
    - Testing `admin'; SELECT * FROM users; --` to execute additional queries
 
 5. **Baseline Verification:**
@@ -67,23 +76,27 @@ To execute the tests, you will need:
 ### Test Execution
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/thoth-tech/doubtfire-astro.git
    cd doubtfire-astro
    ```
 
 2. **Navigate to the security test scripts directory:**
+
    ```bash
    cd docs/src/content/security/scripts
    ```
 
 3. **Make the script executable:**
+
    ```bash
    chmod +x test-sql-injection.sh
    ```
 
 4. **Review and configure the script if needed:**
    The script is pre-configured with the following settings:
+
    - API URL: http://localhost:3000
    - Client URL: http://localhost:4200
    - Admin credentials: username "aadmin", password "password"
@@ -92,11 +105,13 @@ To execute the tests, you will need:
    Modify these values in the script if your environment differs.
 
 5. **Run the script:**
+
    ```bash
    ./test-sql-injection.sh
    ```
 
 6. **Interpret the results:**
+
    - Green checkmarks (✓) indicate successful blocks of injection attempts
    - Red X marks (✗) indicate potential vulnerabilities
    - Yellow question marks (?) indicate inconclusive tests
@@ -122,21 +137,25 @@ If Nikto is installed, it will also perform a broader vulnerability scan of the 
 When executing the script against our test environment, we observed the following results:
 
 #### Username Field Tests:
+
 - All injection attempts were blocked with 401 status codes
 - Error messages were properly sanitized without revealing database details
 - 6/6 tests passed, 0 failed, 0 inconclusive
 
 #### Password Field Tests:
+
 - All injection attempts were blocked with 401 status codes
 - Error messages were properly sanitized without revealing database details
 - 6/6 tests passed, 0 failed, 0 inconclusive
 
 #### Baseline Functionality:
+
 - Valid credentials test shows as "failed" in script output, but this is only because the script expects a 200 status code and specific response format
 - The application actually returns a 201 status code with valid user data, indicating the authentication system is working correctly
 - This script limitation doesn't affect the SQL injection test results
 
 #### Security Scan:
+
 - Nikto scan completed without detecting SQL injection vulnerabilities
 - Some minor HTTP header recommendations were identified (X-Frame-Options, Content-Type-Options)
 
@@ -151,22 +170,27 @@ The application demonstrated strong resistance to SQL injection attacks at the a
 Based on our findings, the following actions are recommended:
 
 1. **Documentation Update:**
+
    - Add SQL injection prevention techniques to the developer documentation
    - Create training material for new developers on secure coding practices
 
 2. **Security Headers Implementation:**
+
    - Implement X-Frame-Options header to prevent clickjacking attacks
    - Add X-Content-Type-Options header to prevent MIME type sniffing
 
 3. **Regular Security Testing:**
+
    - Implement automated SQL injection testing as part of the CI/CD pipeline
    - Schedule quarterly security audits with broader scope
 
 4. **Input Validation Review:**
+
    - Review other data entry points in the application for similar protection
    - Consider implementing a central input validation service
 
 5. **Error Handling Enhancement:**
+
    - Review error messages across the application to ensure they don't leak sensitive information
    - Implement consistent error handling patterns across all endpoints
 

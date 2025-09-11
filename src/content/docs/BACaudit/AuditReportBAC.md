@@ -1,4 +1,6 @@
-# Web Security Audit: Broken Access Control Vulnerability Report
+---
+title: Web Security Audit Broken Access Control Vulnerability Report
+---
 
 ## Introduction
 
@@ -37,15 +39,18 @@ Our security audit focused on the following test categories:
 ### Testing Procedure
 
 1. **Setup**:
+
    - Clone the repository containing the test script
    - Make the script executable: `chmod +x broken_access_control_test.sh`
    - Configure the API_URL variable in the script (default: `http://localhost:3000`)
 
 2. **Execution**:
+
    - Run the script: `./broken_access_control_test.sh`
    - The script will output results to the console and save detailed logs to a timestamped file
 
 3. **Understanding Results**:
+
    - **PASS (Green)**: The test confirmed proper access controls are in place
    - **FAIL (Red)**: The test identified a security vulnerability that requires attention
    - **INCONCLUSIVE/SKIPPED (Yellow)**: The test requires further investigation or manual verification
@@ -78,11 +83,13 @@ After running the security audit, we identified the following issues:
 ### Critical Vulnerabilities
 
 1. **Insecure Direct Object References (IDOR)**:
+
    - Users can access other users' data by manipulating the user ID
    - Status 200 was returned with full user profile information
    - This allows any authenticated user to view sensitive information of other users
 
 2. **Missing Access Controls on Sensitive Endpoints**:
+
    - The `/api/settings` endpoint returns configuration data without authentication
    - This reveals system configuration including external integrations
 
@@ -93,10 +100,12 @@ After running the security audit, we identified the following issues:
 ### Inconclusive Results Requiring Investigation
 
 1. **Endpoints Returning Empty Results Without Authentication**:
+
    - `/api/activity_types`, `/api/campuses`, `/api/teaching_periods`, and `/api/tii_eula` return 200 status with empty arrays/null values
    - These endpoints should require authentication even when returning empty data
 
 2. **Function Level Access Controls**:
+
    - Teaching period creation attempts resulted in validation errors (400) rather than permission denial
    - The endpoint processes the request and fails on validation instead of rejecting due to insufficient permissions
 
@@ -107,6 +116,7 @@ After running the security audit, we identified the following issues:
 ### Successful Controls
 
 The application successfully implemented:
+
 - Protection against vertical privilege escalation attempts
 - Session token binding and validation
 - HTTP method restrictions (405 responses for inappropriate methods)
@@ -119,11 +129,13 @@ Based on our findings, we recommend the following actions:
 ### Immediate Actions
 
 1. **Fix IDOR Vulnerability**:
+
    - Implement proper authorization checks in the user controller
    - Ensure users can only access their own profile information
    - Add role-based access control for user data access
 
 2. **Secure Settings Endpoint**:
+
    - Require authentication for the `/api/settings` endpoint
    - Implement role-based access to configuration data
    - Consider moving sensitive configuration to a protected admin-only endpoint
@@ -136,17 +148,20 @@ Based on our findings, we recommend the following actions:
 ### Recommended Improvements
 
 1. **Consistent Authentication Checks**:
+
    - Add authentication requirements to all API endpoints, even those returning empty results
    - Implement uniform authorization checks that run before request processing
    - Return consistent 401/403 responses instead of empty data arrays
 
 2. **Enhance Function Level Controls**:
+
    - Ensure permission checks occur before parameter validation
    - Return clear authorization errors rather than validation errors for unauthorized requests
 
 3. **Implement Comprehensive Logging**:
+
    - Add detailed logging for all access control failures
-   - Set up alerts for potential authorization bypass attempts 
+   - Set up alerts for potential authorization bypass attempts
    - Include sufficient context in logs to identify potential attack patterns
 
 4. **Regular Security Testing**:
